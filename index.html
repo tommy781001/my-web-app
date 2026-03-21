@@ -3,108 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>體重紀錄</title>
+    <title>專業體脂紀錄</title>
     <link rel="apple-touch-icon" href="icon.png">
-    <meta name="apple-mobile-web-app-title" content="體重紀錄">
-    <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <style>
-        :root { --primary: #007AFF; --bg: #F2F2F7; }
-        body { font-family: -apple-system, system-ui; background: var(--bg); margin: 0; padding: 20px; color: #1C1C1E; }
-        .container { max-width: 500px; margin: 0 auto; }
-        h1 { font-size: 28px; font-weight: 700; margin-bottom: 20px; color: #000; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-size: 14px; color: #8E8E93; margin-bottom: 5px; }
-        input { width: 100%; padding: 12px; border: 1px solid #D1D1D6; border-radius: 10px; font-size: 18px; box-sizing: border-box; }
-        button { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 17px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
-        button:active { opacity: 0.7; }
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 0.5px solid #D1D1D6; }
-        .history-item:last-child { border-bottom: none; }
-        .weight-val { font-size: 18px; font-weight: 600; }
-        .date-val { font-size: 14px; color: #8E8E93; }
-        .bmi-tag { font-size: 12px; background: #E5E5EA; padding: 2px 8px; border-radius: 5px; }
+        :root { --primary: #007AFF; --bg: #F2F2F7; --card: #FFFFFF; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 15px; padding-bottom: 50px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 { font-size: 24px; margin-bottom: 15px; }
+        .card { background: var(--card); padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .input-group { margin-bottom: 10px; }
+        label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; }
+        input { width: 100%; padding: 10px; border: 1px solid #DDD; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+        .btn-box { display: flex; gap: 10px; margin-top: 10px; }
+        button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .btn-save { background: var(--primary); color: white; }
+        .btn-export { background: #34C759; color: white; }
+        .history-card { font-size: 14px; border-bottom: 1px solid #EEE; padding: 10px 0; }
+        .history-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 5px; font-size: 12px; }
+        .diff-pos { color: #FF3B30; } .diff-neg { color: #34C759; }
+        .header-row { display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>體重紀錄</h1>
+    <div class="header-row">
+        <h1>體組成紀錄</h1>
+        <button onclick="clearData()" style="width:auto; background:none; color:red; font-size:12px;">清空數據</button>
+    </div>
     
     <div class="card">
-        <div class="input-group">
-            <label>身高 (cm)</label>
-            <input type="number" id="height" placeholder="例如: 175" onchange="saveHeight()">
+        <div class="grid">
+            <div class="input-group"><label>身高 (cm)</label><input type="number" id="h" onchange="ls('h',this.value)"></div>
+            <div class="input-group"><label>體重 (kg)</label><input type="number" step="0.1" id="w"></div>
+            <div class="input-group"><label>體脂肪率 (%)</label><input type="number" step="0.1" id="fat"></div>
+            <div class="input-group"><label>內臟脂肪</label><input type="number" step="0.5" id="vfat"></div>
+            <div class="input-group"><label>骨骼筋率 (%)</label><input type="number" step="0.1" id="muscle"></div>
+            <div class="input-group"><label>體年齡</label><input type="number" id="age"></div>
+            <div class="input-group"><label>基礎代謝 (kcal)</label><input type="number" id="bmr"></div>
         </div>
-        <div class="input-group">
-            <label>今日體重 (kg)</label>
-            <input type="number" step="0.1" id="weight" placeholder="0.0">
+        <div class="btn-box">
+            <button class="btn-save" onclick="save()">儲存紀錄</button>
+            <button class="btn-export" onclick="exportExcel()">匯出 Excel</button>
         </div>
-        <button onclick="addRecord()">記錄體重</button>
     </div>
 
-    <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h2 style="margin:0; font-size:18px;">歷史趨勢</h2>
-            <button onclick="clearAll()" style="width:auto; padding:5px 10px; background:#FF3B30; font-size:12px;">清空</button>
-        </div>
-        <div id="historyList"></div>
-    </div>
+    <div id="list"></div>
 </div>
 
 <script>
-    // 初始化
+    const ls = (k,v) => localStorage.setItem(k,v);
+    const lg = (k) => localStorage.getItem(k);
+
     window.onload = () => {
-        document.getElementById('height').value = localStorage.getItem('userHeight') || '';
-        renderHistory();
+        document.getElementById('h').value = lg('h') || '';
+        render();
     };
 
-    function saveHeight() {
-        localStorage.setItem('userHeight', document.getElementById('height').value);
-    }
-
-    function addRecord() {
-        const weight = document.getElementById('weight').value;
-        const height = document.getElementById('height').value;
-        if (!weight) return alert('請輸入體重');
-
-        const record = {
-            weight: weight,
-            date: new Date().toLocaleDateString(),
-            bmi: height ? (weight / ((height/100)**2)).toFixed(1) : null
+    function save() {
+        const data = {
+            date: new Date().toLocaleString(),
+            w: parseFloat(document.getElementById('w').value),
+            fat: document.getElementById('fat').value,
+            vfat: document.getElementById('vfat').value,
+            muscle: document.getElementById('muscle').value,
+            age: document.getElementById('age').value,
+            bmr: document.getElementById('bmr').value,
+            h: document.getElementById('h').value
         };
 
-        let history = JSON.parse(localStorage.getItem('weightHistory') || '[]');
-        history.unshift(record); // 加入到最前面
-        localStorage.setItem('weightHistory', JSON.stringify(history));
+        if(!data.w) return alert("請輸入體重");
+        data.bmi = data.h ? (data.w / ((data.h/100)**2)).toFixed(1) : '--';
+
+        let history = JSON.parse(lg('weights') || '[]');
         
-        document.getElementById('weight').value = '';
-        renderHistory();
+        // 計算前次差
+        if(history.length > 0) {
+            data.diff = (data.w - history[0].w).toFixed(1);
+        } else {
+            data.diff = "0.0";
+        }
+
+        history.unshift(data);
+        ls('weights', JSON.stringify(history));
+        render();
+        // 清空輸入
+        ['w','fat','vfat','muscle','age','bmr'].forEach(id => document.getElementById(id).value = '');
     }
 
-    function renderHistory() {
-        const history = JSON.parse(localStorage.getItem('weightHistory') || '[]');
-        const list = document.getElementById('historyList');
-        list.innerHTML = history.length ? '' : '<p style="color:#8E8E93; text-align:center;">尚無紀錄</p>';
-        
-        history.forEach(item => {
+    function render() {
+        const history = JSON.parse(lg('weights') || '[]');
+        const list = document.getElementById('list');
+        list.innerHTML = '<h3>歷史紀錄</h3>';
+        history.forEach(i => {
+            const diffClass = i.diff > 0 ? 'diff-pos' : 'diff-neg';
+            const diffShow = i.diff > 0 ? `+${i.diff}` : i.diff;
             list.innerHTML += `
-                <div class="history-item">
-                    <div>
-                        <div class="weight-val">${item.weight} kg</div>
-                        <div class="date-val">${item.date}</div>
+                <div class="card history-card">
+                    <div style="display:flex; justify-content:space-between; font-weight:bold;">
+                        <span>${i.date}</span>
+                        <span class="${diffClass}">差: ${diffShow} kg</span>
                     </div>
-                    ${item.bmi ? `<div class="bmi-tag">BMI: ${item.bmi}</div>` : ''}
+                    <div class="history-grid">
+                        <span>體重: ${i.w}</span>
+                        <span>BMI: ${i.bmi}</span>
+                        <span>體脂: ${i.fat}%</span>
+                        <span>內臟脂: ${i.vfat}</span>
+                        <span>骨骼筋: ${i.muscle}%</span>
+                        <span>體年齡: ${i.age}</span>
+                        <span>基代: ${i.bmr}</span>
+                    </div>
                 </div>
             `;
         });
     }
 
-    function clearAll() {
-        if (confirm('確定要刪除所有紀錄嗎？')) {
-            localStorage.removeItem('weightHistory');
-            renderHistory();
+    function exportExcel() {
+        const history = JSON.parse(lg('weights') || '[]');
+        if(history.length === 0) return alert("沒有數據可以匯出");
+
+        let csv = "\uFEFF日期,體重,前次差,BMI,體脂肪率,內臟脂肪,骨骼筋率,體年齡,基礎代謝\n";
+        history.forEach(i => {
+            csv += `${i.date},${i.w},${i.diff},${i.bmi},${i.fat},${i.vfat},${i.muscle},${i.age},${i.bmr}\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", `體重紀錄_${new Date().toLocaleDateString()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function clearData() {
+        if(confirm("確定要清空所有紀錄嗎？數據無法恢復。")) {
+            ls('weights', '[]');
+            render();
         }
     }
 </script>
