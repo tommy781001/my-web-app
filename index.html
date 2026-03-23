@@ -2,53 +2,55 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>專業體脂紀錄 v2.2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>專業體脂紀錄 v2.2.1</title>
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #007AFF; --bg: #F2F2F7; --card: #FFFFFF; --text-sec: #8E8E93; --tab-bg: rgba(255,255,255,0.9); }
+        :root { --primary: #007AFF; --bg: #F2F2F7; --card: #FFFFFF; --text-sec: #8E8E93; --tab-bg: rgba(255,255,255,0.95); }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 0; color: #1C1C1E; -webkit-tap-highlight-color: transparent; }
         
         /* 頁面切換機制 */
-        .page { display: none; padding: 15px; padding-top: 20px; padding-bottom: 100px; min-height: 100vh; box-sizing: border-box; }
+        .page { display: none; padding: 15px; padding-bottom: calc(110px + env(safe-area-inset-bottom)); min-height: 100vh; box-sizing: border-box; }
         .page.active { display: block; }
 
-        /* 頂部標題 */
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 5px; }
-        .header h1 { font-size: 22px; margin: 0; }
+        /* 頂部安全區域與標題 */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: calc(env(safe-area-inset-top) + 15px) 5px 0 5px; }
+        .header h1 { font-size: 26px; margin: 0; font-weight: bold; }
 
-        /* 卡片與格狀佈局 */
-        .card { background: var(--card); padding: 18px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); margin-bottom: 15px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .input-group { margin-bottom: 8px; }
-        label { display: block; font-size: 12px; color: var(--text-sec); margin-bottom: 4px; }
-        input { width: 100%; padding: 12px; border: 1px solid #E5E5EA; border-radius: 10px; font-size: 16px; box-sizing: border-box; background: #FAFAFA; outline: none; }
+        /* 卡片與格狀佈局修正 */
+        .card { background: var(--card); padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 20px; position: relative; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .input-group { margin-bottom: 5px; position: relative; }
+        .input-group-date { margin-bottom: 25px; } /* 拉大日期與輸入框的距離 */
+        label { display: block; font-size: 13px; color: var(--text-sec); margin-bottom: 6px; }
+        input { width: 100%; padding: 14px; border: 1px solid #E5E5EA; border-radius: 12px; font-size: 16px; box-sizing: border-box; background: #FAFAFA; outline: none; }
         input:focus { border-color: var(--primary); background: #FFF; }
+        #rec-date { -webkit-appearance: none; appearance: none; } /* iOS 原生樣式優化 */
 
-        /* 按鈕 */
-        .btn-box { display: flex; gap: 12px; margin-top: 15px; }
-        button { padding: 14px; border-radius: 12px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-save { background: var(--primary); color: white; width: 100%; }
-        .btn-export { background: #E5E5EA; color: #3A3A3C; width: 100%; margin-top: 10px; }
+        /* 按鈕優化 */
+        button { padding: 16px; border-radius: 14px; border: none; font-size: 17px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-save { background: var(--primary); color: white; width: 100%; margin-top: 25px; }
+        .btn-export { background: #E5E5EA; color: #3A3A3C; width: 100%; margin-top: 15px; }
         button:active { opacity: 0.7; transform: scale(0.98); }
 
-        /* 底部導覽列 */
-        .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 85px; background: var(--tab-bg); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding-top: 10px; border-top: 0.5px solid #C6C6C8; z-index: 1000; }
-        .tab-item { display: flex; flexDirection: column; align-items: center; color: var(--text-sec); font-size: 10px; text-decoration: none; width: 33%; }
-        .tab-item.active { color: var(--primary); }
-        .tab-icon { font-size: 24px; margin-bottom: 4px; }
+        /* 底部導覽列修正 (適配安全區域) */
+        .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: calc(85px + env(safe-area-inset-bottom)); background: var(--tab-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; justify-content: space-around; padding-top: 15px; border-top: 0.5px solid #C6C6C8; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+        .tab-item { display: flex; flex-direction: column; align-items: center; color: var(--text-sec); font-size: 11px; text-decoration: none; width: 33%; }
+        .tab-item.active { color: var(--primary); font-weight: bold; }
+        .tab-icon { font-size: 26px; margin-bottom: 6px; }
 
         /* 圖表與清單 */
-        .chart-container { height: 350px; width: 100%; margin-top: 10px; }
-        .history-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,0.04); }
-        .history-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #F2F2F7; padding-bottom: 8px; }
-        .history-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; color: #3A3A3C; }
+        .chart-card { height: 480px; }
+        .chart-container { height: calc(100% - 40px); width: 100%; margin-top: 15px; }
+        .history-item { background: white; padding: 18px; border-radius: 14px; margin-bottom: 12px; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .history-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #F2F2F7; padding-bottom: 10px; }
+        .history-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; color: #3A3A3C; }
         
         /* 版本號 */
-        .version-tag { text-align: center; color: #C7C7CC; font-size: 11px; margin-top: 20px; }
+        .version-tag { text-align: center; color: #C7C7CC; font-size: 11px; margin-top: 30px; }
     </style>
 </head>
 <body>
@@ -56,14 +58,14 @@
 <div id="page-input" class="page active">
     <div class="header">
         <h1>新紀錄</h1>
-        <div style="display:flex; align-items:center; gap:5px; background:white; padding:5px 10px; border-radius:10px;">
-            <label style="font-size:11px; margin:0;">身高</label>
-            <input type="number" id="h" placeholder="cm" style="width:50px; padding:3px; font-size:13px; border:none; background:none; text-align:right;" onchange="ls('h',this.value)">
+        <div style="display:flex; align-items:center; gap:5px; background:white; padding:8px 12px; border-radius:12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <label style="font-size:12px; margin:0; color: #1C1C1E;">身高</label>
+            <input type="number" id="h" placeholder="cm" style="width:50px; padding:3px; font-size:14px; border:none; background:none; text-align:right;" onchange="ls('h',this.value)">
         </div>
     </div>
 
     <div class="card">
-        <div class="input-group" style="margin-bottom: 20px;">
+        <div class="input-group input-group-date">
             <label>📅 紀錄日期 (可補記往日資料)</label>
             <input type="date" id="rec-date">
         </div>
@@ -75,15 +77,15 @@
             <div class="input-group"><label>體年齡</label><input type="number" id="age"></div>
             <div class="input-group"><label>基代 (kcal)</label><input type="number" id="bmr"></div>
         </div>
-        <button class="btn-save" onclick="save()">儲存今日數據</button>
+        <button class="btn-save" onclick="save()">儲存數據</button>
     </div>
     
-    <div class="version-tag" onclick="location.reload(true)">Build v2.2.0 • 點擊更新</div>
+    <div class="version-tag" onclick="location.reload(true)">Build v2.2.1 • 點擊更新介面</div>
 </div>
 
 <div id="page-chart" class="page">
     <div class="header"><h1>趨勢分析</h1></div>
-    <div class="card" style="height: 450px;">
+    <div class="card chart-card">
         <label>體重變化 (最近10筆)</label>
         <div class="chart-container">
             <canvas id="mainChart"></canvas>
@@ -94,7 +96,7 @@
 <div id="page-list" class="page">
     <div class="header">
         <h1>歷史紀錄</h1>
-        <button onclick="clearData()" style="background:none; color:#FF3B30; font-size:13px; font-weight:normal;">清空</button>
+        <button onclick="clearData()" style="background:none; color:#FF3B30; font-size:14px; font-weight:normal; padding: 10px;">清空</button>
     </div>
     <div id="history-contents"></div>
     <button class="btn-export" onclick="exportExcel()">匯出 CSV 報表</button>
@@ -180,8 +182,8 @@
         const ctx = document.getElementById('mainChart').getContext('2d');
         weightChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{ data: [], borderColor: '#007AFF', tension: 0.4, fill: true, backgroundColor: 'rgba(0,122,255,0.08)', pointRadius: 5, pointBackgroundColor: '#007AFF' }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            data: { labels: [], datasets: [{ label: '體重 (kg)', data: [], borderColor: '#007AFF', tension: 0.4, fill: true, backgroundColor: 'rgba(0,122,255,0.08)', pointRadius: 5, pointBackgroundColor: '#007AFF', pointBorderColor: '#FFF', pointBorderWidth: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, grid: { color: '#E5E5EA' } }, x: { grid: { display: false } } } }
         });
     }
 
@@ -221,7 +223,7 @@
         link.click();
     }
 
-    function clearData() { if(confirm("確定永久刪除所有紀錄？")) { ls('weights', '[]'); renderHistory(); } }
+    function clearData() { if(confirm("確定永久刪除所有紀錄？這操作無法還原。")) { ls('weights', '[]'); renderHistory(); } }
 </script>
 
 </body>
