@@ -1,260 +1,222 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>專業體脂紀錄 v2.3.2</title>
-    <link rel="apple-touch-icon" href="icon.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>紫微斗數 PWA v1.9.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
     <style>
-        :root { --primary: #007AFF; --bg: #F2F2F7; --card: #FFFFFF; --text-sec: #8E8E93; --tab-bg: rgba(255,255,255,0.95); --danger: #FF3B30; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 0; color: #1C1C1E; -webkit-tap-highlight-color: transparent; }
-        .page { display: none; height: 100vh; overflow: hidden; box-sizing: border-box; }
-        .page.active { display: flex; flex-direction: column; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: calc(env(safe-area-inset-top) + 15px) 20px 10px 20px; background: var(--bg); }
-        .header h1 { font-size: 26px; margin: 0; font-weight: bold; }
-        
-        .content-scroll { flex: 1; overflow-y: auto; padding: 0 15px 120px 15px; }
-        .toolbar { display: flex; gap: 10px; padding: 10px 15px; background: var(--bg); border-bottom: 0.5px solid #C6C6C8; }
-        .btn-tool { background: var(--card); color: var(--primary); padding: 12px; font-size: 14px; border-radius: 12px; flex: 1; text-align: center; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-
-        .card { background: var(--card); padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        label { display: block; font-size: 13px; color: var(--text-sec); margin-bottom: 6px; }
-        
-        /* 核心修正：統一輸入框寬度與對齊 */
-        input { width: 100%; padding: 14px; border: 1px solid #E5E5EA; border-radius: 12px; font-size: 16px; box-sizing: border-box; background: #FAFAFA; outline: none; -webkit-appearance: none; }
-        #rec-date { width: 100%; display: block; } /* 確保日期框佔滿卡片內寬度 */
-        
-        button { border: none; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-save { background: var(--primary); color: white; width: 100%; padding: 16px; border-radius: 14px; font-size: 17px; margin-top: 25px; }
-        
-        .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: calc(85px + env(safe-area-inset-bottom)); background: var(--tab-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; justify-content: space-around; padding-top: 15px; border-top: 0.5px solid #C6C6C8; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
-        .tab-item { display: flex; flex-direction: column; align-items: center; color: var(--text-sec); font-size: 11px; text-decoration: none; width: 33%; }
-        .tab-item.active { color: var(--primary); font-weight: bold; }
-        .tab-icon { font-size: 26px; margin-bottom: 6px; }
-
-        .history-item { background: white; padding: 18px; border-radius: 14px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        .history-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #F2F2F7; padding-bottom: 10px; align-items: center; }
-        .history-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; color: #3A3A3C; font-size: 13px; }
-        .action-btns { display: flex; gap: 8px; }
-        .action-btn { font-size: 12px; padding: 6px 10px; border-radius: 8px; font-weight: normal; }
-        .edit-btn { background: #F2F2F7; color: var(--primary); }
-        .del-btn { background: #FFE5E5; color: var(--danger); }
-        .version-tag { text-align: center; color: #C7C7CC; font-size: 11px; margin-top: 30px; margin-bottom: 20px; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&display=swap');
+        body { background-color: #f1f5f9; font-family: sans-serif; }
+        .ziwei-font { font-family: 'Noto Serif TC', serif; }
+        .chart-container { 
+            width: 100%; aspect-ratio: 1/1; background-color: #334155; 
+            border: 4px solid #1e293b; display: grid; 
+            grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); gap: 2px;
+        }
+        .cell { background: white; position: relative; padding: 2px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+        .stars-wrapper { display: flex; flex-direction: row-reverse; height: 90%; overflow: hidden; gap: 1px; }
+        .aux-star-container { display: flex; flex-direction: column; flex-shrink: 0; width: 14px; gap: 1px;}
+        .aux-star-box { position: relative; display: flex; flex-direction: column; align-items: center; }
+        .aux-star-text { writing-mode: vertical-rl; font-size: 0.6rem; line-height: 1.1; font-weight: bold; }
+        .aux-star-box.ji .aux-star-text { color: #1e40af; }
+        .aux-star-box.sha .aux-star-text { color: #ea580c; }
+        .aux-star-box.lma .aux-star-text { color: #854d0e; }
+        .main-star-container { display: flex; flex-direction: row-reverse; gap: 1px; }
+        .main-star-box { position: relative; display: flex; flex-direction: column; align-items: center; }
+        .main-star-text { writing-mode: vertical-rl; color: #be123c; font-weight: bold; font-size: 0.95rem; line-height: 1.1; font-family: 'Noto Serif TC', serif; }
+        .shihua-tag { font-size: 0.5rem; color: white; padding: 1px; border-radius: 2px; margin-top: 1px; font-weight: 900; width: 13px; text-align: center; line-height: 1; }
+        .shihua-lu { background: #be123c; } .shihua-quan { background: #15803d; } .shihua-ke { background: #1d4ed8; } .shihua-ji { background: #111827; }
+        .center-box { grid-column: 2 / 4; grid-row: 2 / 4; background: #f8fafc; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 4px; }
+        .palace-tag { font-size: 0.65rem; color: white; padding: 1px 4px; border-radius: 3px; background: #6366f1; font-weight: bold; position: absolute; bottom: 3px; right: 3px;}
+        .palace-tag.is-ming { background: #be123c; }
+        .dz-text { font-size: 0.6rem; color: #94a3b8; position: absolute; bottom: 3px; left: 3px; font-weight: bold; }
+        .record-item { border-bottom: 1px solid #e2e8f0; padding: 8px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
-<body>
+<body class="p-2 md:p-6 pb-20">
 
-<div id="page-input" class="page active">
-    <div class="header">
-        <h1 id="input-title">新紀錄</h1>
-        <div style="background:white; padding:6px 12px; border-radius:12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display:flex; align-items:center; gap:8px;">
-            <label style="margin:0; font-size:13px; color:#1C1C1E;">身高</label>
-            <input type="number" id="h" placeholder="cm" style="width:40px; padding:0; border:none; background:none; text-align:right; font-size:16px; font-weight:500;" onchange="ls('h',this.value)">
+    <div class="max-w-xl mx-auto bg-white shadow-xl rounded-2xl p-5 mb-4 border-t-4 border-indigo-600">
+        <h1 class="text-xl font-bold text-slate-800 ziwei-font mb-4 text-center">紫微斗數 PWA v1.9</h1>
+        
+        <form id="ziweiForm" class="space-y-4">
+            <div class="grid grid-cols-4 gap-2">
+                <div class="col-span-2"><label class="block text-[10px] font-bold text-slate-400 mb-1">姓名</label><input type="text" id="userName" value="楊博元" class="w-full border-b-2 p-1 outline-none text-sm"></div>
+                <div><label class="block text-[10px] font-bold text-slate-400 mb-1">性別</label><select id="gender" class="w-full border-b-2 p-1 outline-none text-sm"><option value="1">男</option><option value="0">女</option></select></div>
+                <div><label class="block text-[10px] font-bold text-slate-400 mb-1">曆法</label><select id="calendarType" class="w-full border-b-2 p-1 outline-none text-sm"><option value="solar">國曆</option><option value="lunar">農曆</option></select></div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div><label class="block text-[10px] font-bold text-slate-400 mb-1">出生日期</label><input type="date" id="birthDate" value="1989-10-01" class="w-full border-b-2 p-1 outline-none text-sm"></div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1">出生時辰</label>
+                    <select id="birthHour" class="w-full border-b-2 p-1 outline-none text-sm">
+                        <option value="0">00:00-01:00 (子)</option><option value="1">01:00-03:00 (丑)</option><option value="2">03:00-05:00 (寅)</option><option value="3">05:00-07:00 (卯)</option><option value="4">07:00-09:00 (辰)</option><option value="5">09:00-11:00 (巳)</option><option value="6">11:00-13:00 (午)</option><option value="7">13:00-15:00 (未)</option><option value="8">15:00-17:00 (申)</option><option value="9">17:00-19:00 (酉)</option><option value="10">19:00-21:00 (戌)</option><option value="11">21:00-23:00 (亥)</option><option value="late-zi">23:00-00:00 (子)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-5 gap-2">
+                <button type="submit" class="col-span-4 bg-indigo-700 text-white font-bold py-3 rounded-lg active:scale-95 transition-all text-sm">執行排盤</button>
+                <button type="button" onclick="saveRecord()" class="col-span-1 bg-emerald-600 text-white rounded-lg flex items-center justify-center active:scale-95">💾</button>
+            </div>
+        </form>
+
+        <div class="mt-6">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-xs font-bold text-slate-500">歷史紀錄清單</h2>
+                <div class="flex gap-2">
+                    <button onclick="exportCSV()" class="text-[10px] bg-slate-100 px-2 py-1 rounded border">匯出 CSV</button>
+                    <label class="text-[10px] bg-slate-100 px-2 py-1 rounded border cursor-pointer">匯入<input type="file" accept=".csv" onchange="importCSV(this)" class="hidden"></label>
+                </div>
+            </div>
+            <div id="recordList" class="max-h-40 overflow-y-auto bg-slate-50 rounded-lg border"></div>
         </div>
     </div>
-    <div class="content-scroll">
-        <div class="card">
-            <div style="margin-bottom: 20px;">
-                <label>📅 紀錄日期</label>
-                <input type="date" id="rec-date">
-            </div>
-            <div class="grid">
-                <div class="input-group"><label>體重 (kg)</label><input type="number" step="0.1" id="w" placeholder="0.0"></div>
-                <div class="input-group"><label>體脂肪 (%)</label><input type="number" step="0.1" id="fat" placeholder="0.0"></div>
-                <div class="input-group"><label>內臟脂肪</label><input type="number" step="0.5" id="vfat" placeholder="0.0"></div>
-                <div class="input-group"><label>骨骼筋 (%)</label><input type="number" step="0.1" id="muscle" placeholder="0.0"></div>
-                <div class="input-group"><label>體年齡</label><input type="number" id="age" placeholder="25"></div>
-                <div class="input-group"><label>基代 (kcal)</label><input type="number" id="bmr" placeholder="1500"></div>
-            </div>
-            <button id="save-btn" class="btn-save" onclick="save()">儲存數據</button>
-            <button id="cancel-edit" style="display:none; width:100%; margin-top:10px; padding:12px; border-radius:12px; background:#E5E5EA;" onclick="resetForm()">取消修改</button>
+
+    <div id="chartView" class="hidden max-w-2xl mx-auto mb-10">
+        <div class="bg-slate-900 p-1 rounded-xl shadow-2xl overflow-hidden">
+            <div class="chart-container" id="mainChart"><div class="center-box" id="centerInfo"></div></div>
         </div>
-        <div class="version-tag" onclick="location.reload(true)">Build v2.3.2 • 點擊更新系統</div>
     </div>
-</div>
 
-<div id="page-chart" class="page">
-    <div class="header"><h1>趨勢分析</h1></div>
-    <div class="content-scroll">
-        <div class="card" style="height: 400px;"><label>最近 10 次體重趨勢</label><div style="height:320px; margin-top:15px;"><canvas id="mainChart"></canvas></div></div>
-    </div>
-</div>
+    <div class="text-center text-[10px] text-slate-400 pb-10"><span>v1.9.0 | </span><button onclick="location.reload()" class="underline hover:text-indigo-500">強制版本更新</button></div>
 
-<div id="page-list" class="page">
-    <div class="header"><h1>歷史紀錄</h1><button onclick="clearData()" style="background:none; color:var(--danger); font-size:14px;">清空</button></div>
-    <div class="toolbar">
-        <div class="btn-tool" onclick="exportExcel()">📤 匯出備份 (CSV)</div>
-        <div class="btn-tool" style="position:relative;">📥 匯入紀錄<input type="file" id="importFile" accept=".csv" style="position:absolute; opacity:0; left:0; top:0; width:100%; height:100%;" onchange="importExcel(this)"></div>
-    </div>
-    <div id="history-contents" class="content-scroll" style="padding-top:15px;"></div>
-</div>
+    <script>
+        const TG = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+        const DZ = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+        const PALACES = ["命宮", "兄弟", "夫妻", "子女", "財帛", "疾厄", "遷移", "交友", "官祿", "田宅", "福德", "父母"];
 
-<nav class="tab-bar">
-    <a href="javascript:void(0)" class="tab-item active" onclick="showPage('input', this)"><div class="tab-icon">✍️</div><div>紀錄</div></a>
-    <a href="javascript:void(0)" class="tab-item" onclick="showPage('chart', this)"><div class="tab-icon">📈</div><div>趨勢</div></a>
-    <a href="javascript:void(0)" class="tab-item" onclick="showPage('list', this)"><div class="tab-icon">📜</div><div>詳細</div></a>
-</nav>
-
-<script>
-    const ls = (k,v) => localStorage.setItem(k,v);
-    const lg = (k) => localStorage.getItem(k);
-    let weightChart, editIndex = -1;
-
-    window.onload = () => {
-        document.getElementById('h').value = lg('h') || '';
-        document.getElementById('rec-date').value = new Date().toISOString().split('T')[0];
-        initChart();
-        renderHistory();
-    };
-
-    function showPage(pageId, el) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById('page-' + pageId).classList.add('active');
-        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
-        if(pageId === 'chart') updateChart();
-        if(pageId === 'list') renderHistory();
-    }
-
-    function save() {
-        const hVal = document.getElementById('h').value;
-        const wVal = parseFloat(document.getElementById('w').value);
-        if(!wVal || !hVal) return alert("請填寫身高與體重");
-        const data = {
-            date: document.getElementById('rec-date').value,
-            w: wVal,
-            fat: document.getElementById('fat').value || '--',
-            vfat: document.getElementById('vfat').value || '--',
-            muscle: document.getElementById('muscle').value || '--',
-            age: document.getElementById('age').value || '--',
-            bmr: document.getElementById('bmr').value || '--',
-            bmi: (wVal / ((hVal/100)**2)).toFixed(1)
-        };
-        let history = JSON.parse(lg('weights') || '[]');
-        if(editIndex > -1) history[editIndex] = data;
-        else history.push(data);
-        history.sort((a, b) => new Date(b.date) - new Date(a.date));
-        ls('weights', JSON.stringify(history));
-        resetForm();
-        alert("儲存成功");
-    }
-
-    function resetForm() {
-        editIndex = -1;
-        document.getElementById('input-title').innerText = "新紀錄";
-        document.getElementById('save-btn').innerText = "儲存數據";
-        document.getElementById('cancel-edit').style.display = "none";
-        ['w','fat','vfat','muscle','age','bmr'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('rec-date').value = new Date().toISOString().split('T')[0];
-    }
-
-    function editItem(index) {
-        const history = JSON.parse(lg('weights') || '[]');
-        const item = history[index];
-        editIndex = index;
-        document.getElementById('input-title').innerText = "修改紀錄";
-        document.getElementById('save-btn').innerText = "更新數據";
-        document.getElementById('cancel-edit').style.display = "block";
-        document.getElementById('rec-date').value = item.date;
-        document.getElementById('w').value = item.w;
-        document.getElementById('fat').value = item.fat === '--' ? '' : item.fat;
-        document.getElementById('vfat').value = item.vfat === '--' ? '' : item.vfat;
-        document.getElementById('muscle').value = item.muscle === '--' ? '' : item.muscle;
-        document.getElementById('age').value = item.age === '--' ? '' : item.age;
-        document.getElementById('bmr').value = item.bmr === '--' ? '' : item.bmr;
-        showPage('input', document.querySelectorAll('.tab-item')[0]);
-    }
-
-    function deleteItem(index) {
-        if(confirm("確定刪除此筆紀錄？")) {
-            let history = JSON.parse(lg('weights') || '[]');
-            history.splice(index, 1);
-            ls('weights', JSON.stringify(history));
-            renderHistory();
+        // --- 紀錄管理功能 ---
+        function getRecords() { return JSON.parse(localStorage.getItem('zwRecords') || '[]'); }
+        function renderRecords() {
+            const records = getRecords();
+            const list = document.getElementById('recordList');
+            list.innerHTML = records.map((r, i) => `
+                <div class="record-item">
+                    <div class="cursor-pointer flex-1" onclick="loadRecord(${i})">
+                        <span class="font-bold">${r.name}</span> <span class="text-slate-400 text-[10px]">(${r.date} ${r.hName})</span>
+                    </div>
+                    <button onclick="deleteRecord(${i})" class="text-red-400 px-2">✕</button>
+                </div>
+            `).join('');
         }
-    }
-
-    function initChart() {
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        weightChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: [], datasets: [{ data: [], borderColor: '#007AFF', tension: 0.4, fill: true, backgroundColor: 'rgba(0,122,255,0.08)', pointRadius: 5, pointBackgroundColor: '#007AFF' }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-        });
-    }
-
-    function updateChart() {
-        const history = JSON.parse(lg('weights') || '[]').slice(0, 10).reverse();
-        weightChart.data.labels = history.map(i => i.date.split('-')[1] + '/' + i.date.split('-')[2]);
-        weightChart.data.datasets[0].data = history.map(i => i.w);
-        weightChart.update();
-    }
-
-    function renderHistory() {
-        const history = JSON.parse(lg('weights') || '[]');
-        const container = document.getElementById('history-contents');
-        container.innerHTML = history.length ? '' : '<p style="text-align:center; color:#8E8E93; margin-top:50px;">無歷史紀錄</p>';
-        history.forEach((i, idx) => {
-            container.innerHTML += `
-                <div class="history-item">
-                    <div class="history-header">
-                        <span>📅 ${i.date}</span>
-                        <div class="action-btns">
-                            <button class="action-btn edit-btn" onclick="editItem(${idx})">✏️ 修改</button>
-                            <button class="action-btn del-btn" onclick="deleteItem(${idx})">🗑️ 刪除</button>
-                        </div>
-                    </div>
-                    <div class="history-grid">
-                        <span style="grid-column: span 3; color:var(--primary); font-weight:bold; font-size:16px; margin-bottom:5px;">${i.w} kg (BMI: ${i.bmi})</span>
-                        <span>體脂: ${i.fat}%</span><span>內臟: ${i.vfat}</span><span>肌肉: ${i.muscle}%</span>
-                        <span>體年齡: ${i.age}</span><span>基代: ${i.bmr}</span>
-                    </div>
-                </div>`;
-        });
-    }
-
-    function exportExcel() {
-        const history = JSON.parse(lg('weights') || '[]');
-        if(!history.length) return alert("尚無數據");
-        let csv = "\uFEFF日期,體重,BMI,體脂肪,內臟脂肪,骨骼筋,體年齡,基礎代謝\n";
-        history.forEach(i => csv += `${i.date},${i.w},${i.bmi},${i.fat},${i.vfat},${i.muscle},${i.age},${i.bmr}\n`);
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-        link.download = `體脂紀錄_${new Date().toLocaleDateString()}.csv`;
-        link.click();
-    }
-
-    function importExcel(input) {
-        const file = input.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const lines = e.target.result.split('\n');
-            let newHistory = [];
-            for(let i=1; i<lines.length; i++) {
-                const cols = lines[i].split(',');
-                if(cols.length < 2) continue;
-                newHistory.push({
-                    date: cols[0], w: parseFloat(cols[1]), bmi: cols[2], fat: cols[3], 
-                    vfat: cols[4], muscle: cols[5], age: cols[6], bmr: cols[7].trim()
+        function saveRecord() {
+            const records = getRecords();
+            const hourSelect = document.getElementById('birthHour');
+            records.unshift({
+                name: document.getElementById('userName').value,
+                gender: document.getElementById('gender').value,
+                cal: document.getElementById('calendarType').value,
+                date: document.getElementById('birthDate').value,
+                hour: hourSelect.value,
+                hName: hourSelect.options[hourSelect.selectedIndex].text
+            });
+            localStorage.setItem('zwRecords', JSON.stringify(records));
+            renderRecords();
+        }
+        function loadRecord(i) {
+            const r = getRecords()[i];
+            document.getElementById('userName').value = r.name;
+            document.getElementById('gender').value = r.gender;
+            document.getElementById('calendarType').value = r.cal;
+            document.getElementById('birthDate').value = r.date;
+            document.getElementById('birthHour').value = r.hour;
+            document.getElementById('ziweiForm').dispatchEvent(new Event('submit'));
+        }
+        function deleteRecord(i) {
+            const records = getRecords(); records.splice(i, 1);
+            localStorage.setItem('zwRecords', JSON.stringify(records));
+            renderRecords();
+        }
+        function exportCSV() {
+            const records = getRecords();
+            let csv = "姓名,性別(1男0女),曆法(solar/lunar),日期,時辰代碼\n";
+            records.forEach(r => csv += `${r.name},${r.gender},${r.cal},${r.date},${r.hour}\n`);
+            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `紫微紀錄_${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+        }
+        function importCSV(input) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const lines = e.target.result.split('\n').slice(1);
+                const records = getRecords();
+                lines.forEach(line => {
+                    if(!line.trim()) return;
+                    const [name, gender, cal, date, hour] = line.split(',');
+                    records.push({ name, gender, cal, date, hour, hName: '匯入資料' });
                 });
-            }
-            if(confirm(`偵測到 ${newHistory.length} 筆資料，是否與現有紀錄合併？`)) {
-                let existing = JSON.parse(lg('weights') || '[]');
-                let combined = [...existing, ...newHistory];
-                combined.sort((a, b) => new Date(b.date) - new Date(a.date));
-                ls('weights', JSON.stringify(combined));
-                renderHistory();
-                alert("匯入完成");
-            }
-        };
-        reader.readAsText(file);
-    }
+                localStorage.setItem('zwRecords', JSON.stringify(records));
+                renderRecords();
+            };
+            reader.readAsText(file);
+        }
 
-    function clearData() { if(confirm("確定永久刪除所有紀錄？")) { ls('weights', '[]'); renderHistory(); } }
-</script>
+        // --- 核心排盤邏輯 (v1.8.6 加強版) ---
+        document.getElementById('ziweiForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            try {
+                const name = document.getElementById('userName').value;
+                const genderVal = document.getElementById('gender').value;
+                const dateStr = document.getElementById('birthDate').value; 
+                const hVal = document.getElementById('birthHour').value;
+                const isLunarInput = document.getElementById('calendarType').value === 'lunar';
+                let [y, m, d] = dateStr.split('-').map(Number);
+                let solar, lunar;
+                if (isLunarInput) { lunar = Lunar.fromYmd(y, m, d); if (hVal === "late-zi") lunar = lunar.next(1); solar = lunar.getSolar(); }
+                else { solar = Solar.fromYmd(y, m, d); if (hVal === "late-zi") solar = solar.next(1); lunar = solar.getLunar(); }
+                const lMonth = lunar.getMonth(), lDay = lunar.getDay();
+                const ganName = lunar.getYearGan(), zhiName = lunar.getYearZhi();
+                const yTGIdx = TG.indexOf(ganName), yDZIdx = DZ.indexOf(zhiName);
+                const hIdx = (hVal === "late-zi") ? 0 : parseInt(hVal);
+                const personType = (yTGIdx % 2 === 0 ? "陽" : "陰") + (genderVal === "1" ? "男" : "女");
+                const mPos = (2 + (lMonth - 1) - hIdx + 12) % 12;
+                const mTGIdx = ((yTGIdx % 5) * 2 + 2 + (mPos - 2 + 12) % 12) % 10;
+                const juice = (function(tg, dz){
+                    const tn = Math.floor(tg/2)+1, dn = (Math.floor(dz/2)%3)+1;
+                    let n = tn+dn; if(n>5) n-=5; return {1:3, 2:4, 3:2, 4:6, 5:5}[n] || 2;
+                })(mTGIdx, mPos);
+                const zwPos = (function(d, j){ let q = d%j===0 ? d/j : Math.floor(d/j)+1, r = (q*j)-d, p = (q+1)%12; return r===0 ? p : (r%2!==0 ? (p-r+12)%12 : (p+r)%12); })(lDay, juice);
+                const tfPos = (4 - zwPos + 12) % 12;
+                let mainStarMap = Array.from({length: 12}, () => []), auxStarMap = Array.from({length: 12}, () => []); 
+                const shihuaConf = [['廉貞','破軍','武曲','太陽'],['天機','天梁','紫微','太陰'],['天同','天機','文昌','廉貞'],['太陰','天同','天機','巨門'],['貪狼','太陰','右弼','天機'],['武曲','貪狼','天梁','文曲'],['太陽','武曲','太陰','天同'],['巨門','太陽','文曲','文昌'],['天梁','紫微','左輔','武曲'],['破軍','巨門','天機','貪狼']];
+                const currentShihua = shihuaConf[yTGIdx];
+                const addMain = (pos, s) => { if(s) mainStarMap[(pos+12)%12].push({name:s, sh:currentShihua.indexOf(s)}); };
+                ["紫微","天機","","太陽","武曲","天同","","","廉貞"].forEach((s,i)=> addMain(zwPos-i, s));
+                ["天府","太陰","貪狼","巨門","天相","天梁","七殺","","","","破軍"].forEach((s,i)=> addMain(tfPos+i, s));
+                const addAux = (pos, name, type) => { auxStarMap[(pos+12)%12].push({name, type, sh:currentShihua.indexOf(name)}); };
+                addAux(4+lMonth-1, '左輔', 'ji'); addAux(10-lMonth+1, '右弼', 'ji');
+                addAux(10-hIdx, '文昌', 'ji'); addAux(4+hIdx, '文曲', 'ji');
+                const ky = {'甲':[1,7],'乙':[0,8],'丙':[11,9],'丁':[11,9],'戊':[1,7],'己':[0,8],'庚':[1,7],'辛':[6,2],'壬':[3,5],'癸':[3,5]}[ganName];
+                if(ky) { addAux(ky[0], '天魁', 'ji'); addAux(ky[1], '天鉞', 'ji'); }
+                addAux(11-hIdx, '地空', 'sha'); addAux(11+hIdx, '地劫', 'sha');
+                const lcIdx = [2, 3, 5, 6, 5, 6, 8, 9, 11, 0][yTGIdx];
+                addAux(lcIdx, '祿存', 'lma'); addAux(lcIdx+1, '擎羊', 'sha'); addAux(lcIdx-1, '陀羅', 'sha');
+                addAux([2, 11, 8, 5][yDZIdx % 4], '天馬', 'lma');
+                let hs=0, ls=0;
+                if(['寅','午','戌'].includes(zhiName)) { hs=1; ls=3; } else if(['申','子','辰'].includes(zhiName)) { hs=2; ls=10; } else if(['巳','酉','丑'].includes(zhiName)) { hs=3; ls=10; } else { hs=9; ls=10; }
+                addAux(hs+hIdx, '火星', 'sha'); addAux(ls+hIdx, '鈴星', 'sha');
+                const area = document.getElementById('mainChart');
+                area.querySelectorAll('.cell').forEach(c => c.remove());
+                [5, 6, 7, 8, 4, -1, -1, 9, 3, -1, -1, 10, 2, 1, 0, 11].forEach(dzIdx => {
+                    if (dzIdx === -1) return;
+                    const cell = document.createElement('div'); cell.className = 'cell';
+                    let aH = '<div class="aux-star-container">', mH = '<div class="main-star-container">';
+                    auxStarMap[dzIdx].forEach(s => { aH += `<div class="aux-star-box ${s.type}"><span class="aux-star-text">${s.name}</span>${s.sh!==-1?`<span class="shihua-tag ${['shihua-lu','shihua-quan','shihua-ke','shihua-ji'][s.sh]}">${['祿','權','科','忌'][s.sh]}</span>`:''}</div>`; });
+                    mainStarMap[dzIdx].forEach(s => { mH += `<div class="main-star-box"><span class="main-star-text">${s.name}</span>${s.sh!==-1?`<span class="shihua-tag ${['shihua-lu','shihua-quan','shihua-ke','shihua-ji'][s.sh]}">${['祿','權','科','忌'][s.sh]}</span>`:''}</div>`; });
+                    const pIdx = (mPos - dzIdx + 12) % 12;
+                    cell.innerHTML = `<div class="stars-wrapper">${aH}</div>${mH}</div><span class="dz-text">${DZ[dzIdx]}</span><span class="palace-tag ${pIdx === 0 ? 'is-ming' : ''}">${PALACES[pIdx]}</span>`;
+                    area.appendChild(cell);
+                });
+                document.getElementById('centerInfo').innerHTML = `<p class="text-sm font-black">${name}</p><p class="text-[10px] text-indigo-500 font-bold mb-1">${personType}</p><div class="w-full text-[9px] space-y-1"><p class="bg-white p-1 rounded shadow-sm text-center">國: ${solar.toYmd()}</p><p class="bg-white p-1 rounded shadow-sm text-center">農: ${lunar.getYearInGanZhi()} ${lunar.getMonthInChinese()}${lunar.getDayInChinese()}</p></div><div class="mt-2 px-3 py-0.5 bg-red-50 text-red-600 text-[9px] font-black rounded-full border border-red-100">${juice}局</div>`;
+                document.getElementById('chartView').classList.remove('hidden');
+                window.scrollTo({ top: document.getElementById('chartView').offsetTop, behavior: 'smooth' });
+            } catch(err) { console.error(err); }
+        });
+        window.onload = renderRecords;
+    </script>
 </body>
 </html>
