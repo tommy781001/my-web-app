@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>專業體脂紀錄 v2.3.2</title>
+    <title>專業體脂紀錄 v2.4.0</title>
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -20,17 +20,22 @@
         .toolbar { display: flex; gap: 10px; padding: 10px 15px; background: var(--bg); border-bottom: 0.5px solid #C6C6C8; }
         .btn-tool { background: var(--card); color: var(--primary); padding: 12px; font-size: 14px; border-radius: 12px; flex: 1; text-align: center; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        .card { background: var(--card); padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 20px; }
+        .card { background: var(--card); padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 15px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         label { display: block; font-size: 13px; color: var(--text-sec); margin-bottom: 6px; }
         
-        /* 核心修正：統一輸入框寬度與對齊 */
-        input { width: 100%; padding: 14px; border: 1px solid #E5E5EA; border-radius: 12px; font-size: 16px; box-sizing: border-box; background: #FAFAFA; outline: none; -webkit-appearance: none; }
-        #rec-date { width: 100%; display: block; } /* 確保日期框佔滿卡片內寬度 */
+        input, select { width: 100%; padding: 12px; border: 1px solid #E5E5EA; border-radius: 12px; font-size: 15px; box-sizing: border-box; background: #FAFAFA; outline: none; -webkit-appearance: none; }
         
         button { border: none; font-weight: 600; cursor: pointer; transition: 0.2s; }
         .btn-save { background: var(--primary); color: white; width: 100%; padding: 16px; border-radius: 14px; font-size: 17px; margin-top: 25px; }
         
+        /* 趨勢頁專用控制器樣式 */
+        .filter-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
+        .range-btns { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+        .btn-range { background: #E5E5EA; color: #3A3A3C; padding: 8px 12px; border-radius: 10px; font-size: 13px; white-space: nowrap; flex: 1; text-align: center; }
+        .btn-range.active { background: var(--primary); color: white; }
+        .custom-date-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
         .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: calc(85px + env(safe-area-inset-bottom)); background: var(--tab-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; justify-content: space-around; padding-top: 15px; border-top: 0.5px solid #C6C6C8; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
         .tab-item { display: flex; flex-direction: column; align-items: center; color: var(--text-sec); font-size: 11px; text-decoration: none; width: 33%; }
         .tab-item.active { color: var(--primary); font-weight: bold; }
@@ -73,14 +78,50 @@
             <button id="save-btn" class="btn-save" onclick="save()">儲存數據</button>
             <button id="cancel-edit" style="display:none; width:100%; margin-top:10px; padding:12px; border-radius:12px; background:#E5E5EA;" onclick="resetForm()">取消修改</button>
         </div>
-        <div class="version-tag" onclick="location.reload(true)">Build v2.3.2 • 點擊更新系統</div>
+        <div class="version-tag" onclick="location.reload(true)">Build v2.4.0 • 點擊更新系統</div>
     </div>
 </div>
 
 <div id="page-chart" class="page">
     <div class="header"><h1>趨勢分析</h1></div>
     <div class="content-scroll">
-        <div class="card" style="height: 400px;"><label>最近 10 次體重趨勢</label><div style="height:320px; margin-top:15px;"><canvas id="mainChart"></canvas></div></div>
+        <div class="card" style="padding: 15px;">
+            <div class="filter-group">
+                <div>
+                    <label>📊 選擇分析指標</label>
+                    <select id="chartMetric" onchange="updateChart()">
+                        <option value="w">體重 (kg)</option>
+                        <option value="fat">體脂肪 (%)</option>
+                        <option value="muscle">骨骼筋 (%)</option>
+                        <option value="vfat">內臟脂肪</option>
+                        <option value="bmr">基礎代謝 (kcal)</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label>🗓️ 時間範圍</label>
+                    <div class="range-btns">
+                        <button class="btn-range active" onclick="setRange(7, this)">近7天</button>
+                        <button class="btn-range" onclick="setRange(30, this)">近30天</button>
+                        <button class="btn-range" onclick="setRange(180, this)">近半年</button>
+                        <button class="btn-range" onclick="setRange(365, this)">近一年</button>
+                        <button class="btn-range" onclick="setRange('all', this)">全部</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label>🔍 自訂區間</label>
+                    <div class="custom-date-grid">
+                        <input type="date" id="startDate" onchange="applyCustomRange()">
+                        <input type="date" id="endDate" onchange="applyCustomRange()">
+                    </div>
+                </div>
+            </div>
+            
+            <div style="height:280px; margin-top:10px;">
+                <canvas id="mainChart"></canvas>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -103,6 +144,16 @@
     const ls = (k,v) => localStorage.setItem(k,v);
     const lg = (k) => localStorage.getItem(k);
     let weightChart, editIndex = -1;
+    let selectedDays = 7; // 預設 7 天
+
+    // 各指標對應的色調
+    const metricColors = {
+        w: { border: '#007AFF', bg: 'rgba(0,122,255,0.08)' },       // 體重：藍色
+        fat: { border: '#FF9500', bg: 'rgba(255,149,0,0.08)' },     // 體脂：橘色
+        muscle: { border: '#34C759', bg: 'rgba(52,199,89,0.08)' },  // 肌肉：綠色
+        vfat: { border: '#FF3B30', bg: 'rgba(255,59,48,0.08)' },    // 內臟脂肪：紅色
+        bmr: { border: '#AF52DE', bg: 'rgba(175,82,222,0.08)' }    // 基代：紫色
+    };
 
     window.onload = () => {
         document.getElementById('h').value = lg('h') || '';
@@ -182,15 +233,70 @@
         const ctx = document.getElementById('mainChart').getContext('2d');
         weightChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{ data: [], borderColor: '#007AFF', tension: 0.4, fill: true, backgroundColor: 'rgba(0,122,255,0.08)', pointRadius: 5, pointBackgroundColor: '#007AFF' }] },
+            data: { labels: [], datasets: [{ data: [], borderColor: '#007AFF', tension: 0.3, fill: true, backgroundColor: 'rgba(0,122,255,0.08)', pointRadius: 4 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
     }
 
+    // 設定時間範圍
+    function setRange(days, btn) {
+        selectedDays = days;
+        document.querySelectorAll('.btn-range').forEach(b => b.classList.remove('active'));
+        if(btn) btn.classList.add('active');
+        document.getElementById('startDate').value = '';
+        document.getElementById('endDate').value = '';
+        updateChart();
+    }
+
+    // 自訂日期區間發動時，取消按鈕高亮
+    function applyCustomRange() {
+        document.querySelectorAll('.btn-range').forEach(b => b.classList.remove('active'));
+        selectedDays = 'custom';
+        updateChart();
+    }
+
+    // 依設定更新圖表數據與視覺
     function updateChart() {
-        const history = JSON.parse(lg('weights') || '[]').slice(0, 10).reverse();
-        weightChart.data.labels = history.map(i => i.date.split('-')[1] + '/' + i.date.split('-')[2]);
-        weightChart.data.datasets[0].data = history.map(i => i.w);
+        let history = JSON.parse(lg('weights') || '[]');
+        if(!history.length) return;
+
+        // 依日期舊到新排序以正確顯示趨勢
+        history.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        const metric = document.getElementById('chartMetric').value;
+        const startVal = document.getElementById('startDate').value;
+        const endVal = document.getElementById('endDate').value;
+
+        // 篩選日期
+        let filtered = history;
+        if (selectedDays === 'custom') {
+            if (startVal) filtered = filtered.filter(i => i.date >= startVal);
+            if (endVal) filtered = filtered.filter(i => i.date <= endVal);
+        } else if (selectedDays !== 'all') {
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - selectedDays);
+            filtered = filtered.filter(i => new Date(i.date) >= cutoff);
+        }
+
+        // 整理 X 軸與 Y 軸資料
+        const labels = filtered.map(i => {
+            const parts = i.date.split('-');
+            return `${parts[1]}/${parts[2]}`;
+        });
+
+        const dataPoints = filtered.map(i => {
+            const val = parseFloat(i[metric]);
+            return isNaN(val) ? null : val;
+        });
+
+        // 更改顏色與資料
+        const color = metricColors[metric] || metricColors.w;
+        weightChart.data.labels = labels;
+        weightChart.data.datasets[0].data = dataPoints;
+        weightChart.data.datasets[0].borderColor = color.border;
+        weightChart.data.datasets[0].backgroundColor = color.bg;
+        weightChart.data.datasets[0].pointBackgroundColor = color.border;
+        
         weightChart.update();
     }
 
